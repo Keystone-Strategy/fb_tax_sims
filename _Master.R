@@ -46,8 +46,8 @@ for (platform_name in c("YouTube")) {
   
   print(platform_name)
   # Generate the data for the US
-  results_dt <- usa_gen_data(utility_A  = seq(-2.60, -2.20, 0.20) , utility_B      = seq(-2.60, -2.20, 0.20 )  ,
-                             beta       = seq( 3.10,  3.50, 0.10) , gamma_input    = seq( 0.00,  0.50, 0.10 )  ,
+  results_dt <- usa_gen_data(utility_A  = seq(-4.00, -2.00, 1.00) , utility_B      = seq(-4.00, -2.00, 1.00 )  ,
+                             beta       = seq( 3.00,  3.00, 0.10) , gamma_input    = seq( 0.00,  4.00, 1.00 )  ,
                              platform   = platform_name                                                         )
   # Remove the large data.table
   rm(list=("results_dt"))
@@ -59,15 +59,18 @@ for (platform_name in c("YouTube")) {
   min_its <- curve_fit(platform = platform_name)
   
   # For the set of best-fit curves at different levels of initial multi-homing
-  for (i in nrow(min_its)) {
-  
+  for (i in 1:nrow(min_its)) {
+    
+    # Print the iteration
+    print(paste0(i, " / ", nrow(min_its)))
+    
     # Temporary data.table name for each row
     temp_min_its <- min_its[i]
     
     # Print the results calibration
     print("Calibrating results")
     # Run 250 simulations
-    calibrated_results <- rbindlist(pblapply(c(1:250) , function(x) 
+    calibrated_results <- rbindlist(pblapply(c(1:25) , function(x) 
       calibrated_parameters(dt_min_its = "temp_min_its" ,
                             seed      = x               ,
                             platform  = platform_name    )))
@@ -88,8 +91,10 @@ for (platform_name in c("YouTube")) {
     diff_results <- calc_differences(dt_min_its = "temp_min_its" ,
                                      platform = platform_name     )
     
-    # print("Output")
-    # output_figure_data(platform = platform_name)
+    print("Output")
+    # Output the data to an Excel sheet
+    output_figure_data(dt_min_its = "temp_min_its" ,
+                       platform   = platform_name   )
   }
 }
 

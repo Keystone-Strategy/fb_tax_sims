@@ -163,7 +163,7 @@ curve_fit <- function(platform) {
   write.csv(min_iteration              , file.path(out_path, paste0("Minimum Iteration for  " , platform , ".csv"       )))
   
   # Save the 
-  save_fst(actual_sub                  , paste0("Data from Calibration "           , platform), out_path                )
+  save_fst(actual_sub                  , paste0("Data from Calibration "                    , platform), out_path       )
   # save_fst(min_iteration_data          , paste0("Data from Best Fit for "          , platform), out_path              ) # @MG may delete
   return(min_iterations_start_multi)
 }

@@ -1,8 +1,8 @@
 import_yearly_churn <- function() {
   # Data available from Dr. Athey's Affirmative Report subission
-  churn_2009_2011 <- data.table(read.xlsx(file.path(input_fld, "5. FBDIS00060472.xlsx"), sheetName = "Data"))
-  churn_2012      <- data.table(read.xlsx(file.path(input_fld, "6. FBDIS00060471.xlsx"), sheetName = "Data"))
-  churn_2013_2018 <- data.table(read.xlsx(file.path(input_fld, "7. FBDIS00060470.xlsx"), sheetName = "Data"))
+  churn_2009_2011 <- data.table(xlsx::read.xlsx(file.path(input_fld, "5. FBDIS00060472.xlsx"), sheetName = "Data"))
+  churn_2012      <- data.table(xlsx::read.xlsx(file.path(input_fld, "6. FBDIS00060471.xlsx"), sheetName = "Data"))
+  churn_2013_2018 <- data.table(xlsx::read.xlsx(file.path(input_fld, "7. FBDIS00060470.xlsx"), sheetName = "Data"))
   # Append the data
   churn <- rbind(churn_2009_2011, churn_2012, churn_2013_2018)
   # Keep the data for the US

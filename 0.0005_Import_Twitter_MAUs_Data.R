@@ -1,6 +1,6 @@
 import_twitter_maus <- function() {
   # Load in the compiled Twitter MAU data for the United States
-  twitter_usa_users <- data.table(read.xlsx(file.path(input_fld, "Compiled_Twitter_Yearly_MAUs.xlsx"), "MAUs"))
+  twitter_usa_users <- data.table(xlsx::read.xlsx(file.path(input_fld, "Compiled_Twitter_Yearly_MAUs.xlsx"), "MAUs"))
   # Change the name from Users to MAUs
   setnames(twitter_usa_users, "Users", "MAUs")
   # Keep only the data from Q4 of the Year

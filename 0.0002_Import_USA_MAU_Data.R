@@ -1,7 +1,7 @@
 import_usa_mau_data <- function() {
   # Load in the MAU data
-  mau_pre_2011  <- data.table(read.xlsx(file.path(input_fld, "1. FBDIS00060473.xlsx"), sheetName = "Worksheet" ))
-  mau_post_2011 <- data.table(read.xlsx(file.path(input_fld, "2. FBDIS00060474.xlsx"), sheetName = "Data"      ))
+  mau_pre_2011  <- data.table(xlsx::read.xlsx(file.path(input_fld, "1. FBDIS00060473.xlsx"), sheetName = "Worksheet" ))
+  mau_post_2011 <- data.table(xlsx::read.xlsx(file.path(input_fld, "2. FBDIS00060474.xlsx"), sheetName = "Data"      ))
   # Subset the datasets
   mau_pre_2011_sub  <- mau_pre_2011[ , .(ds, country, mau), ]
   mau_post_2011_sub <- mau_post_2011[, .(ds, country, mau), ]
