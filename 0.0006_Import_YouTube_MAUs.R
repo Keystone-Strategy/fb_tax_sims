@@ -1,8 +1,8 @@
 import_youtube_maus <- function() {
   # Load in the 2011 to 2016 YouTube users
-  youtube_2011_2016_users <- data.table(xlsx::read.xlsx(file.path(input_fld, "YouTube_US_Users_2011_2016.xlsx"), "Users"))
+  youtube_2011_2016_users <- data.table(read.xlsx(file.path(input_fld, "YouTube_US_Users_2011_2016.xlsx"), sheet = "Users"))
   # Load in the 2017 to 2019 YouTube users
-  youtube_2017_2019_users <- data.table(xlsx::read.xlsx(file.path(input_fld, "Statista_YouTube_US_MAUs_2017_2019.xlsx"), "Data"))
+  youtube_2017_2019_users <- data.table(read.xlsx(file.path(input_fld, "Statista_YouTube_US_MAUs_2017_2019.xlsx"), sheet = "Data"))
   
   # Clean the 2011 to 2016 data first ---------------------------------------
   

@@ -1,6 +1,12 @@
 output_figure_data <- function(dt_min_its , 
                                platform    ) {
   
+  # Remove the Excel file if it exists 
+  if (platform == "Twitter") {
+    if (file.exists(file.path(tables_figures, "Competitor Production Tables and Figures.xlsx"))) {
+      file.remove(file.path(tables_figures, "Competitor Production Tables and Figures.xlsx"))
+    }
+  }
   
   # Load in the dataset
   input_data         <- data.table(read_fst(file.path(out_path, paste0(platform, "usa_generated_data.fst"))))

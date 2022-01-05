@@ -41,8 +41,8 @@ create_USA_facebook_penetration()   # 1.0001_Create_USA_Facebook_Penetration.R
 merge_fb_pen_competitor_maus()      # 1.0002_Merge_Competitor_Penetration.R
 
 # @MG - ADD BACK TWITTER
-print("TESTING CENTER ON!!!!!!!!!!!!!!!!!!!")
-for (platform_name in c("YouTube")) {
+# print("TESTING CENTER ON!!!!!!!!!!!!!!!!!!!")
+for (platform_name in c("Twitter", "YouTube")) {
   
   print(platform_name)
   # Generate the data for the US
