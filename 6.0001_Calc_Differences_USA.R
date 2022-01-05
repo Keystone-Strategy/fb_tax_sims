@@ -1,10 +1,24 @@
-calc_differences <- function(platform) {
+calc_differences <- function(dt_min_its , 
+                             platform    ) {
   
+  # TESTING CENTER
+  # minimum_iterations <- get("temp_min_its")
+  # platform <- "YouTube"
+  # print("TESTING CENTER ON!!!!")
+  
+  # Minimum iterations
+  minimum_iterations <- get(dt_min_its)
+  
+  # Starting penetration for this data.table
+  start_multi_pen <- minimum_iterations[, start_pen_AB, ]
+
   # Import the data
-  unique_params_2    <- data.table(read_fst(file.path(out_path, paste0("Minimized Iterations MSE "   , platform, ".fst"))))
-  unique_params_2    <- unique_params_2[order(MSE_tot),,]
-  minimum_iterations <- unique_params_2[1]
-  actual_cf          <- data.table(read_fst(file.path(out_path, paste0(platform, "_Actual_Counterfactual_Affirmative_Model.fst"))))
+  actual_cf  <- data.table(read_fst(
+    file.path(out_path,
+              paste0(platform                                               ,
+                     "_Actual_Counterfactual_Affirmative_Model_Start_Multi" ,
+                     start_multi_pen                                        ,
+                     ".fst"))))
 
   # Calculate the mean penetration line for each counterfactual by iteration
   mean_tbl <- actual_cf[, .(m_pen_A         = mean(pen_A_beg    ) ,
@@ -40,8 +54,19 @@ calc_differences <- function(platform) {
   third_row  <- dcast(final_results, Model ~ Year, value.var = "diff"     )
   # Rbind the tables together
   ratio_maus <- rbind(first_row, second_row, third_row)
-  # Save the final_tbl
-  save_fst(ratio_maus            , paste0(platform, " Ratio of No-Transfer to Actual MAUs - Corrected Parker & Athey") , out_path)
-  save_fst(counterfactual_curves , paste0(platform, " Counterfactual Curves of Corrected Parker and Athey Models"    ) , out_path)
+  # Save the final table
+  save_fst(ratio_maus,
+           paste0(platform                                                           ,
+                  " Ratio of No-Transfer to Actual MAUs - Corrected Parker & Athey " ,
+                  "Start_Multi"                                                      ,
+                  start_multi_pen                                                     ),
+           out_path)
+  # Save the counterfactual curves
+  save_fst(counterfactual_curves                                                    ,
+           paste0(platform                                                          ,
+                  " Counterfactual Curves of Corrected Parker and Athey Models"     ,
+                  "Start_Multi"                                                     ,
+                  start_multi_pen                                                    )
+           , out_path)
   return(ratio_maus)
 }

@@ -3,12 +3,12 @@ usa_gen_data <- function(utility_A     =    (-7.00:-1.00      ) , utility_B     
                          platform                                                                        ) {
 
   # TESTING CENTER
-  utility_A    <- seq(-5.00, -1.00, 0.50)
-  utility_B    <- seq(-5.00, -1.00, 0.50)
-  beta         <- seq( 0.10,  4.10, 0.50)
-  gamma_input  <- seq( 0.00,  1.00, 0.10)
-  platform     <- "YouTube"
-  print("TESTING CENTER ON!!!")
+  # utility_A    <- seq(-5.00, -1.00, 0.50)
+  # utility_B    <- seq(-5.00, -1.00, 0.50)
+  # beta         <- seq( 0.10,  4.10, 0.50)
+  # gamma_input  <- seq( 0.00,  1.00, 0.10)
+  # platform     <- "YouTube"
+  # print("TESTING CENTER ON!!!")
   
   # Create the data.table of inputs based on the inputs to the function
   inputs_dt <- data.table(u_A       = utility_A , u_B        = utility_B    ,

@@ -45,33 +45,51 @@ print("TESTING CENTER ON!!!!!!!!!!!!!!!!!!!")
 for (platform_name in c("YouTube")) {
   
   print(platform_name)
+  # Generate the data for the US
   results_dt <- usa_gen_data(utility_A  = seq(-2.60, -2.20, 0.20) , utility_B      = seq(-2.60, -2.20, 0.20 )  ,
                              beta       = seq( 3.10,  3.50, 0.10) , gamma_input    = seq( 0.00,  0.50, 0.10 )  ,
                              platform   = platform_name                                                         )
+  # Remove the large data.table
   rm(list=("results_dt"))
   gc()
   
+  # Print that we've moved onto the curve fitting process
   print("Curve fit")
+  # Find the best-fit curves
   min_its <- curve_fit(platform = platform_name)
   
-  print("Calibrating results")
-  calibrated_results <- rbindlist(pblapply(c(1:250) , function(x) 
-    calibrated_parameters(seed=x                   ,
-                          platform = platform_name  )))
+  # For the set of best-fit curves at different levels of initial multi-homing
+  for (i in nrow(min_its)) {
   
-  
-  print("Estimation")
-  estimation_results <- estimate_simulate_usa(dt       = "calibrated_results" , 
-                                              platform = platform_name         )
-  rm(list=("calibrated_results"))
-  gc()
-  rm(list=("estimation_results"))
-  gc()
-
-  print("Results")
-  diff_results <- calc_differences(platform = platform_name)
-  
-  print("Output")
-  output_figure_data(platform = platform_name)
+    # Temporary data.table name for each row
+    temp_min_its <- min_its[i]
+    
+    # Print the results calibration
+    print("Calibrating results")
+    # Run 250 simulations
+    calibrated_results <- rbindlist(pblapply(c(1:250) , function(x) 
+      calibrated_parameters(dt_min_its = "temp_min_its" ,
+                            seed      = x               ,
+                            platform  = platform_name    )))
+    
+    # Print the start of the estimation process
+    print("Estimation")
+    estimation_results <- estimate_simulate_usa(dt         = "calibrated_results" ,
+                                                dt_min_its = "temp_min_its"       ,
+                                                platform   = platform_name         )
+    # Remove the calibrated results
+    rm(list=("calibrated_results"))
+    gc()
+    rm(list=("estimation_results"))
+    gc()
+    
+    print("Results")
+    # Differences in results
+    diff_results <- calc_differences(dt_min_its = "temp_min_its" ,
+                                     platform = platform_name     )
+    
+    # print("Output")
+    # output_figure_data(platform = platform_name)
+  }
 }
 

@@ -1,15 +1,14 @@
-estimate_simulate_usa <- function(dt, platform) {
+estimate_simulate_usa <- function(dt         ,
+                                  dt_min_its ,
+                                  platform    ) {
   
-  # TESTING CENTER
-  # dt <- "facebook_dt"
-  # print("TESTING CENTER ON!!!")
-
   # Import the data
-  same_util <- get(dt)
-  unique_params_2 <- data.table(read_fst(file.path(out_path, paste0("Minimized Iterations MSE ", platform, ".fst"))))
-  unique_params_2 <- unique_params_2[order(MSE_tot),,]
-  minimum_iterations <- unique_params_2[1]
-  
+  same_util          <- get(dt         )
+  minimum_iterations <- get(dt_min_its )
+
+  # Starting penetration for this data.table
+  start_multi_pen <- minimum_iterations[, start_pen_AB, ]
+
   # Calculate the pen_A beginning
   same_util[, pen_A_beg := pen_A_only_beg + pen_AB_beg, ]
 
@@ -126,7 +125,9 @@ estimate_simulate_usa <- function(dt, platform) {
   actual_cf_athey_m[, competitor_pct_fb := 0.25, ]
   
   # Save the datasets
-  save_fst(actual_cf_athey_m , paste0(platform, "_Actual_Counterfactual_Affirmative_Model") , out_path)
-  save_fst(same_util         , paste0(platform, "_Updated_Estimation_Dataset"             ) , out_path)
+  save_fst(actual_cf_athey_m , paste0(platform                                               ,
+                                      "_Actual_Counterfactual_Affirmative_Model_Start_Multi" ,
+                                      start_multi_pen                                         ) , out_path)
+  # save_fst(same_util         , paste0(platform , "_Updated_Estimation_Dataset"             ) , out_path) @MG can likely remove
   return(actual_cf_athey_m)
 }

@@ -1,16 +1,13 @@
-calibrated_parameters <- function(dt_min_its           , 
-                                  platform             ,
-                                  seed = 1              ) {
+calibrated_parameters <- function(dt_min_its , 
+                                  platform   ,
+                                  seed = 1    ) {
   
-  min_iterations_start_multi <- data.table(read_fst(file.path(out_path                                            , 
-                                                              paste0("Minimized Iterations Starting Penetration " ,
-                                                                     platform                                     , 
-                                                                     ".fst"                                        ))))
+  # Get the minimum iteration in use
+  dt_min_its      <- get(dt_min_its)
   
-  unique_params_2 <- data.table(read_fst(file.path(out_path, paste0("Minimized Iterations MSE "   , platform, ".fst"))))
-  unique_params_2 <- unique_params_2[order(MSE_tot)]
-  dt_min_its      <- unique_params_2[1]
-  
+  # Starting penetration for this data.table
+  start_multi_pen <- dt_min_its[, start_pen_AB, ]
+
   # Characteristics of the minimum iterations
   utility_A    <- dt_min_its[, utility_A, ]
   utility_B    <- dt_min_its[, utility_B, ]
@@ -263,7 +260,12 @@ calibrated_parameters <- function(dt_min_its           ,
   facebook_dt[, seed := seed , ]
   
   # Save the datasets
-  save_fst(facebook_dt , paste0(platform, "fb_simulation_data") , out_path)
+  save_fst(facebook_dt , paste0(platform             , 
+                                "fb_simulation_data" ,
+                                "_start_multi_"      ,
+                                start_multi_pen       ),
+           out_path)
+  # Return the data.table
   return(facebook_dt)
 }
 
