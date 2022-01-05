@@ -4,7 +4,7 @@ calibrated_parameters <- function(dt_min_its           ,
   
   unique_params_2 <- data.table(read_fst(file.path(out_path, paste0("Minimized Iterations MSE "   , platform, ".fst"))))
   unique_params_2 <- unique_params_2[order(MSE_tot)]
-  dt_min_its <- unique_params_2[1]
+  dt_min_its      <- unique_params_2[1]
   
   # Characteristics of the minimum iterations
   utility_A    <- dt_min_its[, utility_A, ]
@@ -32,19 +32,19 @@ calibrated_parameters <- function(dt_min_its           ,
   set.seed(seed)
 
   # Country shell
-  country_dt <- data.table(country = 1:100 , merge_var = 1)
+  country_dt <- data.table(country = 1:139 , merge_var = 1)
   
   # Add a dataset with a the probabilities to be calculated
-  L <- as.data.table(cbind(         period          = c(seq(0,10))       ,
-                                    pen_None        = c(rep(0,11))       ,
-                                    pen_AB          = c(rep(0,11))       ,
-                                    prob_A          = c(rep(0,11))       ,
-                                    prob_B          = c(rep(0,11))       ,
-                                    prob_None       = c(rep(0,11))       ,
-                                    prob_B_given_A  = c(rep(0,11))       ,
-                                    prob_A_given_B  = c(rep(0,11))       ,
-                                    prob_stay_A     = c(rep(0,11))       ,
-                                    prob_stay_B     = c(rep(0,11))))
+  L <- as.data.table(cbind(         period          = c(seq(0,7))       ,
+                                    pen_None        = c(rep(0,8))       ,
+                                    pen_AB          = c(rep(0,8))       ,
+                                    prob_A          = c(rep(0,8))       ,
+                                    prob_B          = c(rep(0,8))       ,
+                                    prob_None       = c(rep(0,8))       ,
+                                    prob_B_given_A  = c(rep(0,8))       ,
+                                    prob_A_given_B  = c(rep(0,8))       ,
+                                    prob_stay_A     = c(rep(0,8))       ,
+                                    prob_stay_B     = c(rep(0,8))))
   L[, merge_var := 1, ]
   
   # Load in the churn data

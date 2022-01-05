@@ -2,6 +2,7 @@ calc_differences <- function(platform) {
   
   # Import the data
   unique_params_2    <- data.table(read_fst(file.path(out_path, paste0("Minimized Iterations MSE "   , platform, ".fst"))))
+  unique_params_2    <- unique_params_2[order(MSE_tot),,]
   minimum_iterations <- unique_params_2[1]
   actual_cf          <- data.table(read_fst(file.path(out_path, paste0(platform, "_Actual_Counterfactual_Affirmative_Model.fst"))))
 

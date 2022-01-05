@@ -7,6 +7,7 @@ estimate_simulate_usa <- function(dt, platform) {
   # Import the data
   same_util <- get(dt)
   unique_params_2 <- data.table(read_fst(file.path(out_path, paste0("Minimized Iterations MSE ", platform, ".fst"))))
+  unique_params_2 <- unique_params_2[order(MSE_tot),,]
   minimum_iterations <- unique_params_2[1]
   
   # Calculate the pen_A beginning

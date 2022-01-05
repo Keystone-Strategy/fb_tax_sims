@@ -39,15 +39,6 @@ sumna <- function(x) {
   sum(x, na.rm = T)
 }
 
-max_dt_year <- function(dt, var, year_m) {
-  get(dt)[year == year_m, paste0(var, "_", year_m)        := get(var) ,]
-  get(dt)[                  , paste0("m_", var, "_", year_m)  := 
-                              max_na(get(paste0(var,"_", year_m))), 
-                            by = iteration]
-  get(dt)[, paste0(var, "_", year_m) := NULL, ]
-  return(get(dt))
-}
-
 save_fst <- function(dt, name, path){
   write_fst(  dt  , file.path(path, paste0(name, ".fst")))
 }

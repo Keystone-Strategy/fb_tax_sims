@@ -79,7 +79,7 @@ curve_fit <- function(platform) {
   
   actual_sub[, MSE_tot      := MSE_fb + MSE_comp, ]
   
-  #Gget a subset of the data.table to view the results
+  # Get a subset of the data.table to view the results
   unique_params_1 <- unique(actual_sub[, .(iteration   ,
                                            utility_A   , utility_B ,
                                            beta        , gamma     ,
@@ -126,9 +126,8 @@ curve_fit <- function(platform) {
                                               utility_A    , utility_B ,
                                               beta         , gamma     ,
                                               start_pen_AB , MSE_tot    ), ])
-  # Check the minimum
+  # Order the data.table
   unique_params_2 <- unique_params_2[order(MSE_tot)]
-  
   # Get the best ranking
   min_iteration <- unique_params_2[1]
   
