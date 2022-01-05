@@ -84,7 +84,7 @@ curve_fit <- function(platform) {
                                            utility_A   , utility_B ,
                                            beta        , gamma     ,
                                            start_pen_AB , MSE_tot    ), ])
-  # Rank the results
+  # Rank the results by each starting point
   unique_params_1 <- unique_params_1[order(MSE_tot)]
   
   # Change the name for the input
@@ -128,18 +128,42 @@ curve_fit <- function(platform) {
                                               start_pen_AB , MSE_tot    ), ])
   # Order the data.table
   unique_params_2 <- unique_params_2[order(MSE_tot)]
-  # Get the best ranking
-  min_iteration <- unique_params_2[1]
+  # Get the unique starting penetration of multi-homers
+  u_start_pen_multi <- unique_params_2[, .N, by = start_pen_AB][, start_pen_AB, ]
+  # Minimum by each starting penetration
+  min_iterations_start_multi <- rbindlist(lapply(u_start_pen_multi, function(x) {
+    unique_params_2[start_pen_AB == x,,][order(MSE_tot)][1]
+  }))
+
+  # Associated penetrations for minimum iterations
+  lapply(min_iterations_start_multi[, iteration, ], function(x) {
+    # Get the penetrations based on hte iteration
+    temp <- actual_sub[iteration == x,
+                       .(period, actual_pen_A, actual_pen_B, start_pen_AB),]
+    # Save the data.table
+    save_fst(temp , paste0("Minimum Iteration for ", platform, " StartMulti-", temp[1, start_pen_AB]), out_path)
+    write.csv(temp, file.path(out_path, paste0("Minimum Iteration for " , 
+                                               platform                 ,
+                                               " StartMulti-"           ,
+                                               temp[1, start_pen_AB]    , 
+                                               ".csv"                    )))
+  })
   
   # Get the associated data for the minimum iteration
-  min_iteration_data <- actual_sub[iteration == min_iteration[, iteration, ], 
-                                   .(period, actual_pen_A, actual_pen_B),]
+  min_iteration <- min_iterations_start_multi[order(MSE_tot)][1]
+
+  # Save the datasets -------------------------------------------------------
+
+  # Save the minimized by each starting penetration
+  save_fst( min_iterations_start_multi , paste0("Minimized Iterations Starting Penetration ", platform) , out_path      )
+  write.csv(min_iterations_start_multi , file.path(out_path, paste0("Minimized Iterations Starting Penetrations for " , 
+                                                                    platform, ".csv"                                    )))
+  # Save the minimum iteration among all starting penetrations of multi-homing
+  save_fst( min_iteration              , paste0("Minimized MSE in all Scenarios for "       , platform) , out_path      )
+  write.csv(min_iteration              , file.path(out_path, paste0("Minimum Iteration for  " , platform , ".csv"       )))
   
-  # Save the unique parameters data -----------------------------------------
-  save_fst(unique_params_2     , paste0("Minimized Iterations MSE "        , platform), out_path          )
-  write.csv(unique_params_2    , file.path(out_path, paste0("Ranking of Parameters  " , platform , ".csv" )))
-  write.csv(min_iteration      , file.path(out_path, paste0("Minimum Iteration for  " , platform , ".csv" )))
-  save_fst(actual_sub          , paste0("Best Fit Lines for Graphing "     , platform), out_path          )
-  save_fst(min_iteration_data  , paste0("Data from Best Fit for "          , platform), out_path          )
-  return(min_iteration)
+  # Save the 
+  save_fst(actual_sub                  , paste0("Data from Calibration "           , platform), out_path                )
+  # save_fst(min_iteration_data          , paste0("Data from Best Fit for "          , platform), out_path              ) # @MG may delete
+  return(min_iterations_start_multi)
 }

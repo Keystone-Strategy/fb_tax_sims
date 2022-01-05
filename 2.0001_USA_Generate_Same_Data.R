@@ -3,12 +3,12 @@ usa_gen_data <- function(utility_A     =    (-7.00:-1.00      ) , utility_B     
                          platform                                                                        ) {
 
   # TESTING CENTER
-  # utility_A    <- seq(-5.00,  1.00, 0.50)
-  # utility_B    <- seq(-5.00,  1.00, 0.50)
-  # beta         <- seq( 0.10,  4.10, 0.50)
-  # gamma_input  <- seq( 0.00,  1.00, 0.10)
-  # platform     <- "YouTube"
-  # print("TESTING CENTER ON!!!")
+  utility_A    <- seq(-5.00, -1.00, 0.50)
+  utility_B    <- seq(-5.00, -1.00, 0.50)
+  beta         <- seq( 0.10,  4.10, 0.50)
+  gamma_input  <- seq( 0.00,  1.00, 0.10)
+  platform     <- "YouTube"
+  print("TESTING CENTER ON!!!")
   
   # Create the data.table of inputs based on the inputs to the function
   inputs_dt <- data.table(u_A       = utility_A , u_B        = utility_B    ,
@@ -37,7 +37,7 @@ usa_gen_data <- function(utility_A     =    (-7.00:-1.00      ) , utility_B     
     # Set the competitor penetration to the YouTube penetration
     m_comp_pen <- m_youtube_pen
     # Additionally, set the iterations for the level of multi-homing at 0.01
-    comp_iter <- 0.05
+    comp_iter <- 0.10
   }
   
   # Calculations of probabilities -------------------------------------------
@@ -119,9 +119,24 @@ usa_gen_data <- function(utility_A     =    (-7.00:-1.00      ) , utility_B     
   # Order M
   M <- M[order(iteration, country)]
   
+  # Initializes the progress bar
+  pb <- txtProgressBar(min   = 0      ,  # Minimum value of the progress bar
+                       max   = 7      ,  # Maximum value of the progress bar
+                       style = 3      ,  # Progress bar style (also available style = 1 and style = 2)
+                       width = 50     ,  # Progress bar width. Defaults to getOption("width")
+                       char  = "="     ) # Character used to create the bar
+  
+  
   # Loop through the time periods
   for (p in 0:(7)) {
-
+    
+    # Get the starting time
+    start_time <- Sys.time()
+    
+    if (p == 0) {
+      print("Started data-generating process")
+    }
+    
     # Save a copy of the metrics prior to churn
     M[period == p, pen_None_beg     := pen_None    , ]
     M[period == p, pen_A_only_beg   := pen_A_only  , ]
@@ -188,7 +203,22 @@ usa_gen_data <- function(utility_A     =    (-7.00:-1.00      ) , utility_B     
     M[period == p+1, pen_AB      := pen_AB_next                                   , by = .(iteration, country)]
     M[period == p+1, pen_T       := pen_None + pen_A_only + pen_B_only + pen_AB   , by = .(iteration, country)]
     
+    # Sets the progress bar to the current state
+    setTxtProgressBar(pb, p)
+    
+    # Get the ending time
+    end_time <- Sys.time()
+    
+    # Print the loop time
+    print(paste0("This loop took ", format((end_time - start_time) / 60, digits = 3), " minutes."))
+    print(paste0("Estimated time remaining based on start of last loop is "   ,
+                 format(((as.numeric(end_time - start_time)) * (7 - p) / 60), digits = 3) ,
+                 " minutes"))
   }
+
+  # Close the connection to the progress bar
+  close(pb) 
+  
   # Copy the output data.table
   actual_dt <- copy(M)  
   
@@ -208,5 +238,6 @@ usa_gen_data <- function(utility_A     =    (-7.00:-1.00      ) , utility_B     
   write.csv(actual_dt, file.path(out_path, paste0(platform , "usa_generated_data.csv" )))
   save_fst(inputs_dt , paste0(platform , "Input_Data"         ) , out_path              )
   return(actual_dt)
+  
 }
 

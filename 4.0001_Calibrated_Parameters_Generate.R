@@ -2,6 +2,11 @@ calibrated_parameters <- function(dt_min_its           ,
                                   platform             ,
                                   seed = 1              ) {
   
+  min_iterations_start_multi <- data.table(read_fst(file.path(out_path                                            , 
+                                                              paste0("Minimized Iterations Starting Penetration " ,
+                                                                     platform                                     , 
+                                                                     ".fst"                                        ))))
+  
   unique_params_2 <- data.table(read_fst(file.path(out_path, paste0("Minimized Iterations MSE "   , platform, ".fst"))))
   unique_params_2 <- unique_params_2[order(MSE_tot)]
   dt_min_its      <- unique_params_2[1]
