@@ -2,6 +2,9 @@ calibrated_parameters <- function(dt_min_its ,
                                   platform   ,
                                   seed = 1    ) {
   
+  # Flush the console
+  flush.console()
+  
   # Get the minimum iteration in use
   dt_min_its      <- get(dt_min_its)
   

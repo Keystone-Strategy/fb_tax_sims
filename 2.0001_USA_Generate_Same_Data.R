@@ -210,10 +210,9 @@ usa_gen_data <- function(utility_A     =    (-7.00:-1.00      ) , utility_B     
     end_time <- Sys.time()
     
     # Print the loop time
-    print(paste0("This loop took ", format((end_time - start_time) / 60, digits = 3), " minutes."))
+    print(paste0("This loop took ", format((end_time - start_time) / 60, digits = 3)))
     print(paste0("Estimated time remaining based on start of last loop is "   ,
-                 format(((as.numeric(end_time - start_time)) * (7 - p) / 60), digits = 3) ,
-                 " minutes"))
+                 format(((as.numeric(end_time - start_time)) * (7 - p) / 60), digits = 3)))
   }
 
   # Close the connection to the progress bar
