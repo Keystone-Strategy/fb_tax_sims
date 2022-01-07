@@ -1,5 +1,4 @@
-calc_differences <- function(dt_min_its , 
-                             platform    ) {
+calc_differences <- function(platform) {
   
   # TESTING CENTER
   # minimum_iterations <- get("temp_min_its")
@@ -7,11 +6,10 @@ calc_differences <- function(dt_min_its ,
   # print("TESTING CENTER ON!!!!")
   
   # Minimum iterations
-  minimum_iterations <- get(dt_min_its)
-  
+  minimum_iterations <- data.table(read_fst(file.path(out_path, "Temporary Iteration.fst")))
   # Starting penetration for this data.table
   start_multi_pen <- minimum_iterations[, start_pen_AB, ]
-
+  
   # Import the data
   actual_cf  <- data.table(read_fst(
     file.path(out_path,
@@ -19,54 +17,33 @@ calc_differences <- function(dt_min_its ,
                      "_Actual_Counterfactual_Affirmative_Model_Start_Multi" ,
                      start_multi_pen                                        ,
                      ".fst"))))
-
+  
   # Calculate the mean penetration line for each counterfactual by iteration
   mean_tbl <- actual_cf[, .(m_pen_A         = mean(pen_A_beg    ) ,
                             m_pen_A_cf      = mean(pen_A_beg_cf ) ,
                             m_cf_pen_A_bin  = mean(cf_pen_A_bin)) ,
-                        by = .(seed, iteration, period)]
+                        by = .(seed, iteration, period, 
+                               u_A  , u_B     , beta  ,
+                               gamma                   )]
   mean_tbl[, ratio_cf_actual        := m_pen_A_cf     / m_pen_A, ]
   mean_tbl[, ratio_cf_bin_actual    := m_cf_pen_A_bin / m_pen_A, ]
   
   # Compare the mean of the counterfactuals
   counterfactual_curves <- mean_tbl[, .(mean_cf_actual     = mean(m_pen_A_cf     )  ,
-                                        mean_cf_bin_actual = mean(m_cf_pen_A_bin )) , by = period]
+                                        mean_cf_bin_actual = mean(m_cf_pen_A_bin )) ,
+                                    by = .(u_A, u_B, beta, gamma, period)]
   # Resulting differences
   final_results <- mean_tbl[, .(mean_ratio_cf_actual     = mean(ratio_cf_actual)     ,
-                                mean_ratio_cf_bin_actual = mean(ratio_cf_bin_actual)  ), by = period]
+                                mean_ratio_cf_bin_actual = mean(ratio_cf_bin_actual)  ), 
+                            by = .(u_A, u_B, beta, gamma, period)]
   # Add a year variable
-  final_results[, Year := period + 2011, ]
-  # Keep if the year <= 2020
-  final_results <- final_results[Year < 2021,,]
-  # Add a column which is the difference between the two
-  final_results[, diff := mean_ratio_cf_bin_actual - mean_ratio_cf_actual, ]
-  # Add a row variable
-  final_results[, Model := "Athey Estimated Ratio of No-Transfer MAUs to Actual MAUs" , ]
-  # Cast the data to wide
-  first_row <- dcast(final_results, Model ~ Year, value.var = "mean_ratio_cf_bin_actual" )
-  # Add a different name for the model
-  final_results[, Model := "Corrected Parker Model Resulting Ratio"                   , ]
-  # Cast the data to wide
-  second_row  <- dcast(final_results, Model ~ Year, value.var = "mean_ratio_cf_actual"     )
-  # Add a different name for the difference
-  final_results[, Model := "Difference (Athey Estimated - Corrected Parker)", ]
-  # Cast the data to wide
-  third_row  <- dcast(final_results, Model ~ Year, value.var = "diff"     )
-  # Rbind the tables together
-  ratio_maus <- rbind(first_row, second_row, third_row)
-  # Save the final table
-  save_fst(ratio_maus,
-           paste0(platform                                                           ,
-                  " Ratio of No-Transfer to Actual MAUs - Corrected Parker & Athey " ,
-                  "Start_Multi"                                                      ,
-                  start_multi_pen                                                     ),
-           out_path)
-  # Save the counterfactual curves
-  save_fst(counterfactual_curves                                                    ,
-           paste0(platform                                                          ,
-                  " Counterfactual Curves of Corrected Parker and Athey Models"     ,
-                  "Start_Multi"                                                     ,
-                  start_multi_pen                                                    )
-           , out_path)
-  return(ratio_maus)
+  final_results[, Year := period + 2011, ] 
+  # Rename the columns
+  f <- final_results[, .(Year                                                              ,
+                         "Mean Athey Estimated Counterfactual"   = mean_ratio_cf_bin_actual ,
+                         "Mean Corrected Parker Counterfactual" = mean_ratio_cf_actual     ,
+                         u_A, u_B, beta, gamma                                              )]
+  # Make a copy
+  final_results <- copy(f)
+  return(final_results)
 }

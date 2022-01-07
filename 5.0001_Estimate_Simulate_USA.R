@@ -1,17 +1,17 @@
 estimate_simulate_usa <- function(dt         ,
-                                  dt_min_its ,
                                   platform    ) {
   
   # Import the data
-  same_util          <- get(dt         )
-  minimum_iterations <- get(dt_min_its )
+  same_util          <- data.table(read_fst(file.path(out_path, "Output from Calibration.fst")))
+  # Get the minimum iteration in use
+  minimum_iterations <- data.table(read_fst(file.path(out_path, "Temporary Iteration.fst")))
 
   # Starting penetration for this data.table
   start_multi_pen <- minimum_iterations[, start_pen_AB, ]
 
   # Calculate the pen_A beginning
   same_util[, pen_A_beg := pen_A_only_beg + pen_AB_beg, ]
-
+  
   # Order the data.table
   same_util <- same_util[order(seed, iteration, country, period)]
   
@@ -28,7 +28,7 @@ estimate_simulate_usa <- function(dt         ,
   
   # Calculate the LHS variable
   same_util[, lhs   := log(prob_A_calc / (1 - prob_A_calc)), ]
-
+  
   # Remove iterations where the lhs becomes infinite
   same_util[, inf_flag := (is.infinite(lhs) | is.nan(lhs)),]
   same_util[, max_inf_flag := max_na(inf_flag), by = .(seed, iteration)]

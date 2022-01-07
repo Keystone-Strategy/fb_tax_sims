@@ -1,25 +1,19 @@
-usa_gen_data <- function(utility_A     =    (-7.00:-1.00      ) , utility_B      =    (-7.00:-1.00       )  ,
-                         beta          = seq( 0.50, 4.50, 0.50) , gamma_input    = seq( 0.00, 5.00, 0.50 )  , 
-                         platform                                                                        ) {
+usa_gen_data <- function(table_num, 
+                         platform  ) {
 
   # TESTING CENTER
-  # utility_A    <- seq(-5.00, -1.00, 0.50)
-  # utility_B    <- seq(-5.00, -1.00, 0.50)
-  # beta         <- seq( 0.10,  4.10, 0.50)
-  # gamma_input  <- seq( 0.00,  1.00, 0.10)
-  # platform     <- "YouTube"
-  # print("TESTING CENTER ON!!!")
+  # inputs_dt <- data.table(read_fst(file.path(out_path, paste0("grid_num_", 1, ".fst"))))
+  # platform  <- "YouTube"
+  # table_num <- 19
+  # platform <- 'Twitter'
   
-  # Create the data.table of inputs based on the inputs to the function
-  inputs_dt <- data.table(u_A       = utility_A , u_B        = utility_B    ,
-                          beta      = beta      , gamma      = gamma_input   )
-  # Expand the inputs data.table
-  inputs_dt <- data.table(expand(inputs_dt, u_A, u_B, beta, gamma))
-  # Add an iteration counter
-  inputs_dt[, iteration := .I, ]
+  # Import the dataset
+  inputs_dt <- data.table(read_fst(file.path(out_path, paste0("grid_num_", table_num, ".fst"))))
+  # Set the name to the index
+  setnames(inputs_dt, "index", "iteration")
   # Add a merge variable
   inputs_dt[, merge_var :=  1, ]
-  
+
   # Load in the vector of Facebook Penetration as a starting point
   fb_comps_s <-   data.table(read_fst(file.path(out_path, "FB_Competitor_Penetration.fst")))
   # Get the starting penetration of each platform 
@@ -125,17 +119,12 @@ usa_gen_data <- function(utility_A     =    (-7.00:-1.00      ) , utility_B     
                        style = 3      ,  # Progress bar style (also available style = 1 and style = 2)
                        width = 50     ,  # Progress bar width. Defaults to getOption("width")
                        char  = "="     ) # Character used to create the bar
-  
-  
+
   # Loop through the time periods
   for (p in 0:(7)) {
     
     # Get the starting time
     start_time <- Sys.time()
-    
-    if (p == 0) {
-      print("Started data-generating process")
-    }
     
     # Save a copy of the metrics prior to churn
     M[period == p, pen_None_beg     := pen_None    , ]
@@ -197,11 +186,11 @@ usa_gen_data <- function(utility_A     =    (-7.00:-1.00      ) , utility_B     
                                    n=1L, type = "lag") , by = .(iteration, country)]
     
     # Update the real variables
-    M[period == p+1, pen_None    := pen_None_next                                 , by = .(iteration, country)]
-    M[period == p+1, pen_A_only  := pen_A_only_next                               , by = .(iteration, country)]
-    M[period == p+1, pen_B_only  := pen_B_only_next                               , by = .(iteration, country)]
-    M[period == p+1, pen_AB      := pen_AB_next                                   , by = .(iteration, country)]
-    M[period == p+1, pen_T       := pen_None + pen_A_only + pen_B_only + pen_AB   , by = .(iteration, country)]
+    M[period == p+1, pen_None    := pen_None_next                                 ]#, by = .(iteration, country)]
+    M[period == p+1, pen_A_only  := pen_A_only_next                               ]#, by = .(iteration, country)]
+    M[period == p+1, pen_B_only  := pen_B_only_next                               ]#, by = .(iteration, country)]
+    M[period == p+1, pen_AB      := pen_AB_next                                   ]#, by = .(iteration, country)]
+    M[period == p+1, pen_T       := pen_None + pen_A_only + pen_B_only + pen_AB   ]#, by = .(iteration, country)]
     
     # Sets the progress bar to the current state
     setTxtProgressBar(pb, p)
@@ -210,11 +199,14 @@ usa_gen_data <- function(utility_A     =    (-7.00:-1.00      ) , utility_B     
     end_time <- Sys.time()
     
     # Print the loop time
-    print(paste0("This loop took ", format((end_time - start_time) / 60, digits = 3)))
+    print(paste0("This loop took ", format((end_time - start_time), digits = 3)))
     print(paste0("Estimated time remaining based on start of last loop is "   ,
-                 format(((as.numeric(end_time - start_time)) * (7 - p) / 60), digits = 3)))
+                 format((as.numeric(end_time - start_time)) * (7 - p), digits = 3)))
   }
-
+  
+  # Print to the console
+  flush.console()
+  
   # Close the connection to the progress bar
   close(pb) 
   
@@ -233,10 +225,9 @@ usa_gen_data <- function(utility_A     =    (-7.00:-1.00      ) , utility_B     
   actual_dt[, pen_B_beg := pen_B_only_beg + pen_AB_beg, ]
 
   # Save the data.table with the iterations
-  save_fst(actual_dt , paste0(platform , "usa_generated_data" ) , out_path              )
-  write.csv(actual_dt, file.path(out_path, paste0(platform , "usa_generated_data.csv" )))
-  save_fst(inputs_dt , paste0(platform , "Input_Data"         ) , out_path              )
+  save_fst(actual_dt  , paste0(platform , "_usa_generated_data_grid_num_", table_num)        , out_path          )
+  write.csv(actual_dt , file.path(out_path, paste0(platform, "_usa_generated_data_grid_num_" , table_num, ".csv" )))
+  save_fst(inputs_dt  , paste0(platform , "_Input_Data_grid_num_", table_num)                , out_path          )
   return(actual_dt)
-  
 }
 

@@ -1,16 +1,12 @@
-calibrated_parameters <- function(dt_min_its , 
-                                  platform   ,
+calibrated_parameters <- function(platform   ,
                                   seed = 1    ) {
   
-  # Flush the console
-  flush.console()
-  
   # Get the minimum iteration in use
-  dt_min_its      <- get(dt_min_its)
+  dt_min_its <- data.table(read_fst(file.path(out_path, "Temporary Iteration.fst")))       
   
   # Starting penetration for this data.table
   start_multi_pen <- dt_min_its[, start_pen_AB, ]
-
+  
   # Characteristics of the minimum iterations
   utility_A    <- dt_min_its[, utility_A, ]
   utility_B    <- dt_min_its[, utility_B, ]
@@ -35,7 +31,7 @@ calibrated_parameters <- function(dt_min_its ,
   sd_fb_pen <- user_year[, sd(fb_pen  ), ]
   
   set.seed(seed)
-
+  
   # Country shell
   country_dt <- data.table(country = 1:139 , merge_var = 1)
   
@@ -64,7 +60,7 @@ calibrated_parameters <- function(dt_min_its ,
   # Merge to the country_dt
   period_shell <- merge(L, country_dt, by = "merge_var", allow.cartesian = TRUE)
   M <- copy(period_shell)
-
+  
   # Parameters for Facebook
   mean <- m_fb_pen
   sd   <- sd_fb_pen
@@ -115,7 +111,7 @@ calibrated_parameters <- function(dt_min_its ,
   
   # Merge L to the input data to get all scenarios 
   M <- merge(M, inputs_dt, by = "merge_var", allow.cartesian = TRUE)
-
+  
   # Run both the actual and counterfactual scenarios
   for (scenario in c("actual", "cf")) {
     
@@ -128,7 +124,7 @@ calibrated_parameters <- function(dt_min_its ,
     } else {
       cf_flag <- 1
     }
-
+    
     # Apply the cf_flag to the penetration of platform A only
     M[period == 0 , pen_A_only   := pen_A_only * cf_flag                   , ]
     

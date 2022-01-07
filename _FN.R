@@ -1,21 +1,25 @@
 library(data.table)
-library(ggplot2)
-library(gridExtra)
-library(latticeExtra)
 library(stringr)
-library(scales)
 library(openxlsx)
 library(tidyr)
 library(pbapply)
 library(fst)
+library(parallel)
+library(future)
+library(future.apply)
+plan(multisession)
 
 # Add the directories  ----------------------------------------------------
 
 data_fld       <- file.path(project_fld , "02_Data"           )
 input_fld      <- file.path(data_fld    , "01_Input"          )
 out_path       <- file.path(data_fld    , "02_Output"         )
+# Remove the output path if it exists
+unlink(file.path(data_fld, "02_Output"), recursive = T)
+# Recreate the output path
+dir.create(out_path)
+# Recreate the directory
 tables_figures <- file.path(project_fld , "03_Tables_Figures" )
-
 
 # Simple functions --------------------------------------------------------
 
