@@ -41,5 +41,5 @@ import_youtube_maus <- function() {
   youtube[, Year := NULL, ]
   
   # Save the data
-  save_fst(youtube, "YouTube_USA_Users", out_path)
+  save_fst(youtube, "0.0006", out_path)
 }

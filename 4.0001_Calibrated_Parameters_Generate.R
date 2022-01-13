@@ -1,8 +1,14 @@
 calibrated_parameters <- function(platform   ,
-                                  seed = 1    ) {
+                                  seed        ) {
+  
+  # TESTING CENTER!!!
+  # seed <- 1
   
   # Get the minimum iteration in use
-  dt_min_its <- data.table(read_fst(file.path(out_path, "Temporary Iteration.fst")))       
+  dt_min_its <- data.table(read_fst(file.path(out_path,
+                                              paste0("_Master_A_" ,
+                                                     platform     ,
+                                                     ".fst"        ))))       
   
   # Starting penetration for this data.table
   start_multi_pen <- dt_min_its[, start_pen_AB, ]
@@ -12,17 +18,19 @@ calibrated_parameters <- function(platform   ,
   utility_B    <- dt_min_its[, utility_B, ]
   beta         <- dt_min_its[, beta     , ]
   gamma_input  <- dt_min_its[, gamma    , ]
+  MSE_tot      <- dt_min_its[, MSE_tot  , ]
   
   # Create a data.table with the inputs
   inputs_dt <- data.table(u_A       = utility_A , u_B        = utility_B    ,
-                          beta      = beta      , gamma      = gamma_input   )
+                          beta      = beta      , gamma      = gamma_input  , 
+                          MSE       = MSE_tot                                )
   
   # Add a merge variable
   inputs_dt[, merge_var :=  1, ]
   inputs_dt[, iteration := .I, ]
   
   # Load in the vector of facebook penetration as a starting point
-  user_data <- data.table(read_fst(file.path(out_path, "user_model_data.fst")))
+  user_data <- data.table(read_fst(file.path(out_path, "0.0001.fst")))
   # Get the distribution for 2011
   user_year <- user_data[year(TimeUnique) == 2011, .(Code, fb_pen), ]
   
@@ -30,6 +38,7 @@ calibrated_parameters <- function(platform   ,
   m_fb_pen  <- user_year[, mean(fb_pen), ]
   sd_fb_pen <- user_year[, sd(fb_pen  ), ]
   
+  # Set the seed
   set.seed(seed)
   
   # Country shell
@@ -49,7 +58,7 @@ calibrated_parameters <- function(platform   ,
   L[, merge_var := 1, ]
   
   # Load in the churn data
-  us_churn <- data.table(read_fst(file.path(out_path, "US Annual_Churn.fst")))
+  us_churn <- data.table(read_fst(file.path(out_path, "0.0008.fst")))
   
   # Add a merge_var to the US churn data
   us_churn[, period := .I - 1, ]
@@ -187,21 +196,23 @@ calibrated_parameters <- function(platform   ,
       M[period == p, prob_stay_B := 1 - prob_A_given_B, ]  
       
       # Calculate the update ----------------------------------------------------
-      M[, pen_None_next    :=  shift(pen_None*(1 -  prob_A - prob_B)                                      ,
-                                     n=1L, type = "lag") , by = .(iteration, country)]
-      M[, pen_A_only_next  :=  shift(pen_A_only  -  pen_A_only*prob_B_given_A + pen_None*prob_A           ,
-                                     n=1L, type = "lag") , by = .(iteration, country)]
-      M[, pen_B_only_next  :=  shift(pen_B_only  -  pen_B_only*prob_A_given_B + pen_None*prob_B           ,
-                                     n=1L, type = "lag") , by = .(iteration, country)]
-      M[, pen_AB_next      :=  shift(pen_AB      +  pen_B_only*prob_A_given_B + pen_A_only*prob_B_given_A ,
-                                     n=1L, type = "lag") , by = .(iteration, country)]
+      
+      pen_None_next   <- data.table(pen_None   = M[period == p, pen_None*(1 - prob_A - prob_B), ])
+      pen_A_only_next <- data.table(pen_A_only = M[period == p, pen_A_only  - 
+                                                     pen_A_only*prob_B_given_A + pen_None*prob_A])
+      pen_B_only_next <- data.table(pen_B_only = M[period == p, pen_B_only  - 
+                                                     pen_B_only*prob_A_given_B + pen_None*prob_B])
+      pen_AB_next     <- data.table(pen_AB     = M[period == p, pen_AB      + 
+                                                     pen_B_only*prob_A_given_B + pen_A_only*prob_B_given_A])
+      
       
       # Update the real variables
-      M[period == p+1, pen_None    := pen_None_next                                 , by = .(iteration, country)]
-      M[period == p+1, pen_A_only  := pen_A_only_next                               , by = .(iteration, country)]
-      M[period == p+1, pen_B_only  := pen_B_only_next                               , by = .(iteration, country)]
-      M[period == p+1, pen_AB      := pen_AB_next                                   , by = .(iteration, country)]
-      M[period == p+1, pen_T       := pen_None + pen_A_only + pen_B_only + pen_AB   , by = .(iteration, country)]
+      
+      M[period == p+1, pen_None    := pen_None_next                               , ]
+      M[period == p+1, pen_A_only  := pen_A_only_next                             , ]
+      M[period == p+1, pen_B_only  := pen_B_only_next                             , ]
+      M[period == p+1, pen_AB      := pen_AB_next                                 , ]
+      M[period == p+1, pen_T       := pen_None + pen_A_only + pen_B_only + pen_AB , ]
       
     }
     
@@ -226,29 +237,20 @@ calibrated_parameters <- function(platform   ,
   cf_dt[, pen_B_beg := pen_B_only_beg + pen_AB_beg, ]
   
   # Actual data.table
-  actual_dt_n <- actual_dt[, .(iteration      , country        , period         , 
-                               pen_None       , pen_A          , pen_B          , 
-                               pen_AB         , pen_A_only     , pen_B_only     , 
-                               x_A            , x_B            , u_A            ,
-                               u_B            , beta           , gamma          ,
-                               pen_None_beg   , pen_A_only_beg , pen_B_only_beg ,
-                               pen_AB_beg     , pen_A_beg      , pen_B_beg      , 
-                               y_churn                                           )]
+  actual_dt_n <- actual_dt[, .(iteration      , country        , period         ,
+                               pen_A          , pen_AB         , pen_A_only     ,
+                               u_A            , u_B            , beta           ,
+                               gamma          , pen_A_only_beg , pen_B_only_beg ,
+                               pen_AB_beg     , pen_A_beg      , pen_B_beg      ,
+                               y_churn        , MSE)]
   # Counterfactual data.table
   cf_dt_n     <-     cf_dt[, .(iteration                           ,
                                country                             , 
                                period                              ,
-                               pen_None_cf       = pen_None        ,
                                pen_A_cf          = pen_A           ,
-                               pen_B_cf          = pen_B           ,
                                pen_AB_cf         = pen_AB          ,
                                pen_A_only_cf     = pen_A_only      ,
-                               pen_B_only_cf     = pen_B_only      ,
-                               x_A_cf            = x_A             ,
-                               x_B_cf            = x_B             , 
-                               pen_None_beg_cf   = pen_None_beg    ,
                                pen_A_only_beg_cf = pen_A_only_beg  ,
-                               pen_B_only_beg_cf = pen_B_only_beg  ,
                                pen_AB_beg_cf     = pen_AB_beg      ,
                                pen_A_beg_cf      = pen_A_beg       ,
                                pen_B_beg_cf      = pen_B_beg        )]
@@ -258,13 +260,12 @@ calibrated_parameters <- function(platform   ,
   facebook_dt <- facebook_dt[order(iteration, country, period)]
   facebook_dt[, seed := seed , ]
   
-  # Save the datasets
-  save_fst(facebook_dt , paste0(platform             , 
-                                "fb_simulation_data" ,
-                                "_start_multi_"      ,
-                                start_multi_pen       ),
-           out_path)
+  # Save the datasets - @MG is this necessary??
+  # save_fst(facebook_dt , paste0("4.0001_start_multi_" ,
+  #                               start_multi_pen       ,
+  #                               "_seed_"              , 
+  #                               seed                   ),
+  #          out_path)
   # Return the data.table
   return(facebook_dt)
 }
-

@@ -4,5 +4,5 @@ import_user_data <- function() {
   # Calculate the Facebook penetration
   user_data[, fb_pen := FB.MAU.t / Int.t, ]
   # Save the user model data
-  save_fst(user_data, "user_model_data", out_path)
+  save_fst(user_data, "0.0001", out_path)
 }

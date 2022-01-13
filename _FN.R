@@ -80,3 +80,11 @@ inter.extra.polation <- function(input){
   }
   return(y)
 }
+
+tdt <- function(inpdt){
+  transposed <- t(inpdt[,-1,with=F]);
+  colnames(transposed) <- inpdt[[1]];
+  transposed <- data.table(transposed, keep.rownames=T);
+  setnames(transposed, 1, names(inpdt)[1]);
+  return(transposed);
+}

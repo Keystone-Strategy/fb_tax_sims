@@ -16,5 +16,5 @@ import_usa_mau_data <- function() {
   # Make it a date variable
   mau_usa[, date := as.Date(date), ]
   # Save the data
-  save_fst(mau_usa, "mau_usa", out_path)
+  save_fst(mau_usa, "0.0002", out_path)
 }

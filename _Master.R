@@ -3,6 +3,13 @@ gc()
 
 options(java.parameters = "- Xmx4096m")
 
+
+# Options -----------------------------------------------------------------
+
+# Set the minimum number of iterations
+num_sims <-  10
+grid_num <-  10
+
 # Get the user information
 project_fld   <- "C:/_Athey_Production/10_Competitor_Production"
 code_fld      <- file.path(project_fld, "01_Code")
@@ -25,10 +32,12 @@ source(file.path(code_fld, "2.0002_USA_Generate_Same_Data.R"           ))
 source(file.path(code_fld, "3.0001_Curve_Fit.R"                        ))
 source(file.path(code_fld, "3.0002_Aggregate_Iterations.R"             ))
 source(file.path(code_fld, "3.0003_Final_Parameter_Set.R"              ))
+source(file.path(code_fld, "3.0004_File_Cleanup_1.R"                   ))
 source(file.path(code_fld, "4.0001_Calibrated_Parameters_Generate.R"   ))
 source(file.path(code_fld, "5.0001_Estimate_Simulate_USA.R"            ))
 source(file.path(code_fld, "6.0001_Calc_Differences_USA.R"             ))
-source(file.path(code_fld, "7.0001_Output_Figures.R"                   ))
+source(file.path(code_fld, "7.0001_File_Cleanup_2.R"                   ))
+source(file.path(code_fld, "7.0002_File_Cleanup_3.R"                   ))
 
 
 # Run the scripts to import the data
@@ -47,78 +56,82 @@ for (platform_name in c("Twitter", "YouTube")) {
   
   # TESTING CENTER!!!!!!!!
   # platform_name <- "YouTube"
-  # print(platform_name)
-  # Set the divisor for the data
-  
-  # Initialize a data.table for storing later results
-  agg_min_its <- data.table(iteration    = NA, utility_A    = NA, utility_B = NA, beta         = NA,
-                            gamma        = NA, start_pen_AB = NA, MSE_tot   = NA, table_number = NA )
-  saveRDS(agg_min_its, file.path(out_path, paste0(platform_name, " Aggregate Set of Parameters.RDS")))
+  # x = 1
 
   # Print the platform name
   print(platform_name)
   
-  divisor_input <- 37
+  # Set the number of splits for the grid
+  divisor_input <- grid_num
   # Create a smaller grid
-  list_small_grids <- create_grid_sample(utility_A   = seq(-5.00,  1.00, 1.00) , 
-                                         utility_B   = seq(-5.00,  1.00, 1.00) ,
-                                         beta        = seq( 0.10,  5.00, 1.00) ,
-                                         gamma_input = seq( 0.00,  5.00, 1.00) ,
+  list_small_grids <- create_grid_sample(utility_A   = seq(-5.00,  1.00, 0.50) , 
+                                         utility_B   = seq(-5.00,  1.00, 0.50) ,
+                                         beta        = seq( 0.10,  5.00, 0.50) ,
+                                         gamma_input = seq( 0.00,  5.00, 0.50) ,
                                          platform    = platform_name           ,
                                          divisor     = divisor_input            )
-  list_small_grids[[1]]
   # Print check
   print("Starting process of finding parameters")
   # Loop through different sets of initial parameters
-  lapply(1:divisor_input, function(x) {
+  future_lapply(1:divisor_input       , future.seed = TRUE ,
+                function(x) {
     # Generate the data for the smaller dataset
-    results  <- usa_gen_data(table_num = x             ,
-                             platform  = platform_name  )
+    results <- usa_gen_data(table_num = x             ,
+                            platform  = platform_name  )
     # Find the best-fit curves
     min_its <- curve_fit(table_num = x            , 
                          platform = platform_name  )
-    # Additional file to get the minimum from each of the files
-    min_params(table_num = x            ,
-               platform = platform_name  )
-    
   })
   
+  # Additional file to get the minimum from each of the files
+  min_params(platform  = platform_name , 
+             divisor   = divisor_input  )
+
   # Return the final set of parameters
   final_param_set(platform = platform_name)
   # Load in the minimized iterations
-  min_its <- data.table(read_fst(file.path(out_path, "Final - Minimized Iterations.fst")))
+  min_its <- data.table(read_fst(file.path(out_path,
+                                           paste0("3.0003_"     ,
+                                                  platform_name ,
+                                                  ".fst"         ))))
+  # File cleanup
+  file_cleanup_1()
+  
   # Order the data.table
   min_its <- min_its[order(MSE_tot)]
   # Get a count by each grouping
-  min_its[, ranking := seq_len(.N), by = .(utility_A,
-                                           utility_B,
-                                           beta     ,
-                                           gamma     )]
-  # Keep only the top ranking by each parameter space
-  min_its <- min_its[ranking == 1,,]
+  min_its[, ranking := seq_len(.N), by = .(utility_A ,
+                                           utility_B ,
+                                           beta      ,
+                                           gamma      )]
+  # Limit to the top ranking if they're all the same parameters
+  min_its <- min_its[ranking == 1]
 
   # Print check
   print("Starting simulation process to get results.")
-  # Set the minimum number of iterations
-  num_sims <- 5
   # For the set of best-fit curves at different levels of initial multi-homing
   assign(paste0(platform_name, "_diff_results_panel"), 
-         rbindlist(pblapply(1:nrow(min_its),
+         rbindlist(lapply(1:nrow(min_its),
                                  function(x) {
     
     # Temporary data.table name for each row
     temp_min_its <- min_its[x]
     # Print Check
-    save_fst(temp_min_its, "Temporary Iteration", out_path)
+    save_fst(temp_min_its, paste0("_Master_A_"  , 
+                                  platform_name  ),
+             out_path)
 
     print("BEFORE CALIBRATION")
     # Run the simulations
-    calibrated_results <- rbindlist(future_lapply(c(1:num_sims), future.seed = TRUE, 
+    calibrated_results <- rbindlist(future_lapply(c(1:num_sims)         , 
+                                                  future.seed = TRUE    ,
                                                   function(x) 
       calibrated_parameters(seed      = x               ,
                             platform  = platform_name    )))
     # Save the calibrated results
-    save_fst(calibrated_results, "Output from Calibration", out_path)
+    save_fst(calibrated_results, paste0("_Master_B_"  ,
+                                        platform_name  ),
+             out_path)
     
     # Remove the calibrated results
     rm(list=("calibrated_results"))
@@ -137,12 +150,19 @@ for (platform_name in c("Twitter", "YouTube")) {
     diff_results <- calc_differences(platform = platform_name)
     print("AFTER RESULTS")
     # Add the ranking
-    diff_results[, start_pen_AB := temp_min_its[, ranking, ], ]
+    diff_results[, start_pen_AB := temp_min_its[, start_pen_AB, ], ]
     # Return the diff_results
     return(diff_results)
   
   })))
+  # Second file cleanup
+  file_cleanup_2(platform = platform_name)
 }
+# Third file cleanup
+file_cleanup_3()
+# Write the output
 write.csv(Twitter_diff_results_panel , file.path(tables_figures, "Twitter Final Results.csv"))
 write.csv(YouTube_diff_results_panel , file.path(tables_figures, "YouTube Final Results.csv"))
+# check_reproducibility()
+
 

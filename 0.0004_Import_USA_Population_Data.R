@@ -24,5 +24,9 @@ import_usa_population_data <- function() {
   # Subset the dataset
   usa_pop <- usa_pop[, .(ISO, date, population), ]
   # Save the data
-  save_fst(usa_pop, "USA_Population", out_path)
+  save_fst(usa_pop, "0.0004", out_path)
+  # Remove the csv from the file path
+  file.remove(file.path(out_path, "API_SP.POP.TOTL_DS2_en_csv_v2_382278.csv"))
+  file.remove(file.path(out_path, "Metadata_Country_API_SP.POP.TOTL_DS2_en_csv_v2_382278.csv"))
+  file.remove(file.path(out_path, "Metadata_Indicator_API_SP.POP.TOTL_DS2_en_csv_v2_382278.csv"))
 }

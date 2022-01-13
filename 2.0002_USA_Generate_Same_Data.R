@@ -2,20 +2,18 @@ usa_gen_data <- function(table_num,
                          platform  ) {
 
   # TESTING CENTER
-  # inputs_dt <- data.table(read_fst(file.path(out_path, paste0("grid_num_", 1, ".fst"))))
   # platform  <- "YouTube"
-  # table_num <- 19
-  # platform <- 'Twitter'
-  
+  # table_num <- 1
+
   # Import the dataset
-  inputs_dt <- data.table(read_fst(file.path(out_path, paste0("grid_num_", table_num, ".fst"))))
+  inputs_dt <- data.table(read_fst(file.path(out_path, paste0("2.0001_", table_num, ".fst"))))
   # Set the name to the index
   setnames(inputs_dt, "index", "iteration")
   # Add a merge variable
   inputs_dt[, merge_var :=  1, ]
-
+  
   # Load in the vector of Facebook Penetration as a starting point
-  fb_comps_s <-   data.table(read_fst(file.path(out_path, "FB_Competitor_Penetration.fst")))
+  fb_comps_s <-   data.table(read_fst(file.path(out_path, "1.0002.fst")))
   # Get the starting penetration of each platform 
   m_fb_pen      <- fb_comps_s[year == 2011, fb_pen      ,]
   m_twitter_pen <- fb_comps_s[year == 2011, twitter_pen ,]
@@ -51,14 +49,14 @@ usa_gen_data <- function(table_num,
   L[, merge_var := 1, ]
   
   # Load in the churn data
-  us_churn <- data.table(read_fst(file.path(out_path, "US Annual_Churn.fst")))
+  us_churn <- data.table(read_fst(file.path(out_path, "0.0008.fst")))
   
   # Add a merge_var to the US churn data
   us_churn[, period := .I - 1, ]
   
   # Merge the data
   L <- merge(L, us_churn, by = "period")
-
+  
   # Merge L to the input data to get all scenarios 
   L_inputs <- merge(L, inputs_dt, by = "merge_var", allow.cartesian = TRUE)
   
@@ -98,11 +96,15 @@ usa_gen_data <- function(table_num,
   L_inputs <- L_inputs[pen_A_only_first + pen_B_only_first + start_pen_AB_copy <= 1]
   # Create the only country for the set
   L_inputs[, country := 1 , ]
-  # Recreate the merge_variable
-  L_inputs[, merge_var := .I, ]
+  
+  # Drop the merge variable
+  L_inputs[, merge_var := NULL, ]
+  
   # Order the dataset
   L_inputs <- L_inputs[order(country, period),,]
   
+  # microbenchmark({
+    
   # Copy the dataset
   M <- copy(L_inputs)
   
@@ -113,18 +115,8 @@ usa_gen_data <- function(table_num,
   # Order M
   M <- M[order(iteration, country)]
   
-  # Initializes the progress bar
-  pb <- txtProgressBar(min   = 0      ,  # Minimum value of the progress bar
-                       max   = 7      ,  # Maximum value of the progress bar
-                       style = 3      ,  # Progress bar style (also available style = 1 and style = 2)
-                       width = 50     ,  # Progress bar width. Defaults to getOption("width")
-                       char  = "="     ) # Character used to create the bar
-
   # Loop through the time periods
-  for (p in 0:(7)) {
-    
-    # Get the starting time
-    start_time <- Sys.time()
+  for (p in 0:7) {
     
     # Save a copy of the metrics prior to churn
     M[period == p, pen_None_beg     := pen_None    , ]
@@ -176,40 +168,28 @@ usa_gen_data <- function(table_num,
     
     # Calculate the update ----------------------------------------------------
     
-    M[, pen_None_next    :=  shift(pen_None*(1 -  prob_A - prob_B)                                      ,
-                                   n=1L, type = "lag") , by = .(iteration, country)]
-    M[, pen_A_only_next  :=  shift(pen_A_only  -  pen_A_only*prob_B_given_A + pen_None*prob_A           ,
-                                   n=1L, type = "lag") , by = .(iteration, country)]
-    M[, pen_B_only_next  :=  shift(pen_B_only  -  pen_B_only*prob_A_given_B + pen_None*prob_B           ,
-                                   n=1L, type = "lag") , by = .(iteration, country)]
-    M[, pen_AB_next      :=  shift(pen_AB      +  pen_B_only*prob_A_given_B + pen_A_only*prob_B_given_A ,
-                                   n=1L, type = "lag") , by = .(iteration, country)]
-    
+    pen_None_next   <- data.table(pen_None   = M[period == p, pen_None*(1 - prob_A - prob_B), ])
+    pen_A_only_next <- data.table(pen_A_only = M[period == p, pen_A_only  - 
+                                                   pen_A_only*prob_B_given_A + pen_None*prob_A])
+    pen_B_only_next <- data.table(pen_B_only = M[period == p, pen_B_only  - 
+                                                   pen_B_only*prob_A_given_B + pen_None*prob_B])
+    pen_AB_next     <- data.table(pen_AB     = M[period == p, pen_AB      + 
+                                                   pen_B_only*prob_A_given_B + pen_A_only*prob_B_given_A])
+
+
     # Update the real variables
-    M[period == p+1, pen_None    := pen_None_next                                 ]#, by = .(iteration, country)]
-    M[period == p+1, pen_A_only  := pen_A_only_next                               ]#, by = .(iteration, country)]
-    M[period == p+1, pen_B_only  := pen_B_only_next                               ]#, by = .(iteration, country)]
-    M[period == p+1, pen_AB      := pen_AB_next                                   ]#, by = .(iteration, country)]
-    M[period == p+1, pen_T       := pen_None + pen_A_only + pen_B_only + pen_AB   ]#, by = .(iteration, country)]
     
-    # Sets the progress bar to the current state
-    setTxtProgressBar(pb, p)
+    M[period == p+1, pen_None := pen_None_next, ]
+    M[period == p+1, pen_A_only  := pen_A_only_next                             , ]
+    M[period == p+1, pen_B_only  := pen_B_only_next                             , ]
+    M[period == p+1, pen_AB      := pen_AB_next                                 , ]
+    M[period == p+1, pen_T       := pen_None + pen_A_only + pen_B_only + pen_AB , ]
     
-    # Get the ending time
-    end_time <- Sys.time()
-    
-    # Print the loop time
-    print(paste0("This loop took ", format((end_time - start_time), digits = 3)))
-    print(paste0("Estimated time remaining based on start of last loop is "   ,
-                 format((as.numeric(end_time - start_time)) * (7 - p), digits = 3)))
+    # Remove the bulky tables
+    rm(list=c("pen_None_next", "pen_A_only_next", "pen_B_only_next", "pen_AB_next"))
+    gc()
   }
-  
-  # Print to the console
-  flush.console()
-  
-  # Close the connection to the progress bar
-  close(pb) 
-  
+
   # Copy the output data.table
   actual_dt <- copy(M)  
   
@@ -223,11 +203,8 @@ usa_gen_data <- function(table_num,
   # Calculate the actual penetration prior to the churn in each country  
   actual_dt[, pen_A_beg := pen_A_only_beg + pen_AB_beg, ]
   actual_dt[, pen_B_beg := pen_B_only_beg + pen_AB_beg, ]
-
+  
   # Save the data.table with the iterations
-  save_fst(actual_dt  , paste0(platform , "_usa_generated_data_grid_num_", table_num)        , out_path          )
-  write.csv(actual_dt , file.path(out_path, paste0(platform, "_usa_generated_data_grid_num_" , table_num, ".csv" )))
-  save_fst(inputs_dt  , paste0(platform , "_Input_Data_grid_num_", table_num)                , out_path          )
+  save_fst(actual_dt  , paste0("2.0002_",platform, "_", table_num) , out_path          )
   return(actual_dt)
 }
-

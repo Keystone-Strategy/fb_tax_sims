@@ -24,6 +24,8 @@ import_yearly_churn <- function() {
   us_churn_annual <- us_churn_annual[, .(ISO, date, y_churn), ]
   # Only keep 2011 or greater
   us_churn_annual <- us_churn_annual[date >= "2011-01-01",,]
+  # Manually set the churn to 5%
+  # us_churn_annual[, y_churn := 0.05, ]
   # Save the table
-  save_fst(us_churn_annual, "US Annual_Churn", out_path)
+  save_fst(us_churn_annual, "0.0008", out_path)
 }

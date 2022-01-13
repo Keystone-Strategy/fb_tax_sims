@@ -1,8 +1,8 @@
 create_USA_facebook_penetration <- function(){
   # Load in the necessary datasets
-  usa_fb_maus <- read_fst(file.path(out_path, "mau_usa.fst"          ))
-  usa_int_pct <- read_fst(file.path(out_path, "USA_Internet_Pct.fst" ))
-  usa_pop     <- read_fst(file.path(out_path, "USA_Population.fst"   ))
+  usa_fb_maus <- read_fst(file.path(out_path, "0.0002.fst"))
+  usa_int_pct <- read_fst(file.path(out_path, "0.0003.fst"))
+  usa_pop     <- read_fst(file.path(out_path, "0.0004.fst"))
   # Create a shell to hold the data
   month_shell <- shell_fn("USA", "2009-01-01", "2017-12-31", v1 = "ISO", freq = "month")
   
@@ -37,5 +37,5 @@ create_USA_facebook_penetration <- function(){
   usa_maus <- usa_maus[, .(ISO, date, fb_pen, InternetUsersAdjusted), ]
   
   # Save the dataset
-  save_fst(usa_maus, "Facebook US Penetration", out_path)
+  save_fst(usa_maus, "1.0001", out_path)
 }

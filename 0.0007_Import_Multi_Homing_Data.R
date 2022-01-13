@@ -4,5 +4,5 @@ import_multi_homing_data <- function() {
                         m_2014   = c(0.22       ,  NA          ) ,
                         m_2018   = c(0.32       ,  0.87        )  )
   # Save the table
-  save_fst(mult_dt, "Multi-Homing Data - Rebuttal Report", out_path)
+  save_fst(mult_dt, "0.0007", out_path)
 }

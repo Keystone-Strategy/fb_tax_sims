@@ -26,5 +26,9 @@ import_usa_internet_pct_data <- function() {
   # Subset the dataset
   usa_int <- usa_int[, .(ISO, date, pct_int_users)]
   # Save the data
-  save_fst(usa_int, "USA_Internet_Pct", out_path)
+  save_fst(usa_int, "0.0003", out_path)
+  # Remove the csv from the file path
+  file.remove(file.path(out_path, "API_IT.NET.USER.ZS_DS2_en_csv_v2_382946.csv"))
+  file.remove(file.path(out_path, "Metadata_Country_API_IT.NET.USER.ZS_DS2_en_csv_v2_382946.csv"))
+  file.remove(file.path(out_path, "Metadata_Indicator_API_IT.NET.USER.ZS_DS2_en_csv_v2_382946.csv"))
 }

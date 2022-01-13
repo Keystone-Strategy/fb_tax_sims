@@ -2,17 +2,14 @@ curve_fit <- function(table_num,
                       platform  ) {
   
   # TESTING CENTER
-  # platform  <- "Twitter"
-  # table_num <- 19
+  # platform  <- "YouTube"
+  # table_num <- 1
   # print("TESTING CENTER ON!!!!!")
 
   # Import the data
-  actual_cf   <- data.table(read_fst(
-    file.path(out_path, paste0(platform, "_usa_generated_data_grid_num_", table_num, ".fst"))))
-  m_platforms <- data.table(read_fst(
-    file.path(out_path, "Multi-Homing Data - Rebuttal Report.fst"                          )))
-  fb_comps_s  <- data.table(read_fst(
-    file.path(out_path, "FB_Competitor_Penetration.fst"                                    )))
+  actual_cf   <- data.table(read_fst(file.path(out_path, paste0("2.0002_", platform, "_", table_num, ".fst" ))))
+  m_platforms <- data.table(read_fst(file.path(out_path, "0.0007.fst"  )))
+  fb_comps_s  <- data.table(read_fst(file.path(out_path, "1.0002.fst"  )))
   
   # Depending on the platform, load in specific data
   if (platform == "Twitter") {
@@ -52,9 +49,7 @@ curve_fit <- function(table_num,
   
   # Merge the new competitor data
   actual_sub <- merge(actual_pen_copy, comp_usa, by = "year")
-  # Remove specific years
-  actual_sub <- actual_sub[year != 2019]
-  
+
   # Calculate level of simulated multi-homing for 2014 and 2018 -------------
   
   actual_sub <- max_dt_year(dt = "actual_sub" , var = "actual_pen_AB" , year_m = 2014)
@@ -144,23 +139,16 @@ curve_fit <- function(table_num,
   if (nrow(min_iterations_start_multi) > 0) {
     # Associated penetrations for minimum iterations
     lapply(min_iterations_start_multi[, iteration, ], function(x) {
-      # Get the penetrations based on hte iteration
+      # Get the penetrations based on the iteration
       temp <- actual_sub[iteration == x,
                          .(period, actual_pen_A, actual_pen_B, start_pen_AB),]
       # Save the data.table
-      save_fst(temp , paste0("Minimum Iteration for " , 
+      save_fst(temp , paste0("3.0001_" , 
                              platform                 ,
-                             " StartMulti-"           ,
+                             "_start_multi_"          ,
                              temp[1, start_pen_AB]    ,
                              "_grid_num_"             , 
                              table_num), out_path)
-      write.csv(temp, file.path(out_path, paste0("Minimum Iteration for " , 
-                                                 platform                 ,
-                                                 " StartMulti-"           ,
-                                                 temp[1, start_pen_AB]    ,
-                                                 "_grid_num_"             , 
-                                                 table_num                ,
-                                                 ".csv"                    )))
     })
     
     # Get the associated data for the minimum iteration
@@ -169,22 +157,15 @@ curve_fit <- function(table_num,
     # Save the datasets -------------------------------------------------------
     
     # Save the minimized by each starting penetration
-    save_fst(min_iterations_start_multi  , paste0("Minimized Iterations Starting Penetration ",
-                                                  platform, "_grid_num_", table_num            ), 
+    save_fst(min_iterations_start_multi,
+             paste0("3.0001_"    ,
+                    platform     ,
+                    "_grid_num_" ,
+                    table_num    ,
+                    "_A"          ),
              out_path)
-    # Save a csv version of the dataset
-    write.csv(min_iterations_start_multi, file.path(out_path, paste0("Minimized Iterations Starting Penetration ",
-                                                                     platform, "_grid_num_", table_num, ".csv"    )))
-    # Save the minimum iteration among all starting penetrations of multi-homing
-    save_fst(min_iteration, paste0("Minimized MSE in all Scenarios for " ,
-                                   platform, "_grid_num_", table_num)    , out_path)
-    # Save a csv version of the dataset
-    write.csv(min_iteration, file.path(out_path, paste0("Minimized MSE in all Scenarios for " ,
-                                                        platform, "_grid_num_", table_num, ".csv"         )))
-    # Save the data for the calibration 
-    save_fst(actual_sub, paste0("Data from Calibration ", platform, "_grid_num_", table_num), out_path)
+    # Return the minimum iteration
     return(min_iterations_start_multi)
-    
   } else if (nrow(min_iterations_start_multi) == 0)  {
     # Print that there are no scenarios for this parameter space
     print(paste0("There are no parameters which meet the constraints laid out for grid number ", table_num, "."))
@@ -192,7 +173,12 @@ curve_fit <- function(table_num,
     empty_dt <- data.table(iteration    = NA, utility_A    = NA, utility_B = NA, beta         = NA,
                            gamma        = NA, start_pen_AB = NA, MSE_tot   = NA, table_number = table_num   )
     # Save the minimum iteration among all starting penetrations of multi-homing
-    save_fst(empty_dt, paste0("Minimized Iterations Starting Penetration " ,
-                              platform, "_grid_num_", table_num)    , out_path)
+    save_fst(empty_dt            ,
+             paste0("3.0001_"    ,
+                    platform     ,
+                    "_grid_num_" ,
+                    table_num    ,
+                    "_A"          ),
+             out_path)
   }
 }

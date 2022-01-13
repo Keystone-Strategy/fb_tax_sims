@@ -1,8 +1,8 @@
 merge_fb_pen_competitor_maus <- function() {
   # Load in the datasets
-  usa_maus          <- data.table(read_fst(file.path(out_path, "Facebook US Penetration.fst" )))
-  twitter_usa_users <- data.table(read_fst(file.path(out_path, "Twitter_USA_Users.fst"       )))
-  youtube_usa_users <- data.table(read_fst(file.path(out_path, "YouTube_USA_Users.fst"       )))
+  usa_maus          <- data.table(read_fst(file.path(out_path, "1.0001.fst")))
+  twitter_usa_users <- data.table(read_fst(file.path(out_path, "0.0005.fst")))
+  youtube_usa_users <- data.table(read_fst(file.path(out_path, "0.0006.fst")))
 
   # Merge the datasets ------------------------------------------------------
   
@@ -22,5 +22,5 @@ merge_fb_pen_competitor_maus <- function() {
   fb_comps_s[, year := year(date), ]
   
   # Save the dataset
-  save_fst(fb_comps_s, "FB_Competitor_Penetration", out_path)
+  save_fst(fb_comps_s, "1.0002", out_path)
 }

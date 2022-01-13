@@ -14,5 +14,5 @@ import_twitter_maus <- function() {
   # Rename the MAUs to "twitter_maus"
   setnames(twitter_usa_users, "MAUs", "twitter_maus")
   # Save the data
-  save_fst(twitter_usa_users, "Twitter_USA_Users", out_path)
+  save_fst(twitter_usa_users, "0.0005", out_path)
 }
